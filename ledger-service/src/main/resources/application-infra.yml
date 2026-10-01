@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/paypilot_ledger}
+    username: ${DB_USER:paypilot}
+    password: ${DB_PASSWORD:paypilot}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: ledger-service
+      auto-offset-reset: earliest
+    listener:
+      ack-mode: record
+      concurrency: 3
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true

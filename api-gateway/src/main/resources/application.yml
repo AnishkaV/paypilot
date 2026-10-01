@@ -1,0 +1,34 @@
+# Profiles:
+#   local (default)  in-memory rate limiting, nothing to install
+#   infra            rate limiting in Redis, shared by every gateway instance
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    default: local
+
+paypilot:
+  gateway:
+    # Demo keys only. Never commit real keys; in production load them from a secret store.
+    admin-key: ${ADMIN_API_KEY:sk_admin_demo_only}
+    merchants:
+      - api-key: pk_test_demo_merchant
+        merchant-id: m_demo
+      - api-key: pk_test_acme_store
+        merchant-id: m_acme
+    routes:
+      payment-service: ${PAYMENT_SERVICE_URL:http://localhost:8081}
+      ledger-service: ${LEDGER_SERVICE_URL:http://localhost:8082}
+      mock-psp: ${MOCK_PSP_URL:http://localhost:8083}
+    rate-limit:
+      replenish-rate: 20
+      burst-capacity: 40
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,23 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: mock-psp
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+mockpsp:
+  # How long a "timeout" charge waits before answering. Must be longer than
+  # paypilot.psp.read-timeout in payment-service for the unknown-outcome path to trigger.
+  timeout-delay-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

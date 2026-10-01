@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.16</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.paypilot</groupId>
+    <artifactId>paypilot</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>PayPilot</name>
+    <description>UPI-style payment platform with a double-entry ledger, PSP routing and an AI ops copilot</description>
+
+    <modules>
+        <module>paypilot-common</module>
+        <module>mock-psp</module>
+        <module>payment-service</module>
+        <module>ledger-service</module>
+        <module>api-gateway</module>
+    </modules>
+
+    <properties>
+        <!-- Builds and runs on any JDK 17+. On JDK 21+ virtual threads switch on automatically. -->
+        <java.version>17</java.version>
+        <spring-cloud.version>2025.0.3</spring-cloud.version>
+        <springdoc.version>2.8.17</springdoc.version>
+        <resilience4j.version>2.3.0</resilience4j.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.paypilot</groupId>
+                <artifactId>paypilot-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+        <!--
+          Testcontainers integration tests (*IT) for the infra profile: real Postgres, Kafka and
+          Redis in Docker. Opt-in so the normal build never needs Docker:  mvn verify -Pit
+        -->
+        <profile>
+            <id>it</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+          Windows only: tests run in forked JVMs that never call main(), so JdkWorkarounds cannot
+          help there. Point the JDK's Unix-domain socket directory at C:\Users\Public, whose path
+          has no spaces or 8.3 short names (see paypilot-common JdkWorkarounds for the details).
+        -->
+        <profile>
+            <id>windows-jdk-socket-fix</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <configuration>
+                                <systemPropertyVariables>
+                                    <jdk.net.unixdomain.tmpdir>${env.PUBLIC}</jdk.net.unixdomain.tmpdir>
+                                </systemPropertyVariables>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-failsafe-plugin</artifactId>
+                            <configuration>
+                                <systemPropertyVariables>
+                                    <jdk.net.unixdomain.tmpdir>${env.PUBLIC}</jdk.net.unixdomain.tmpdir>
+                                </systemPropertyVariables>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
+</project>

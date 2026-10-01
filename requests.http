@@ -1,0 +1,77 @@
+### PayPilot API examples. Works with the VS Code "REST Client" extension and IntelliJ's HTTP client.
+### Start the stack first: .\run-local.ps1
+
+@gateway = http://localhost:8080
+@merchantKey = pk_test_demo_merchant
+@adminKey = sk_admin_demo_only
+
+### Create a payment (run it twice: the second call is replayed, not charged again)
+POST {{gateway}}/api/v1/payments
+X-Api-Key: {{merchantKey}}
+Idempotency-Key: order-1042-attempt-1
+Content-Type: application/json
+
+{"amount": 49900, "currency": "INR", "method": "UPI", "payer": "anishka@okaxis", "description": "Order #1042"}
+
+### Same key, different amount -> 422 IDEMPOTENCY_KEY_REUSED
+POST {{gateway}}/api/v1/payments
+X-Api-Key: {{merchantKey}}
+Idempotency-Key: order-1042-attempt-1
+Content-Type: application/json
+
+{"amount": 99900, "currency": "INR", "method": "UPI", "payer": "anishka@okaxis", "description": "Order #1042"}
+
+### A declined payment
+POST {{gateway}}/api/v1/payments
+X-Api-Key: {{merchantKey}}
+Idempotency-Key: order-2001
+Content-Type: application/json
+
+{"amount": 150000, "currency": "INR", "method": "UPI", "payer": "decline@upi"}
+
+### PSP times out -> 202 PROCESSING, resolved by the sweeper in ~10s
+POST {{gateway}}/api/v1/payments
+X-Api-Key: {{merchantKey}}
+Idempotency-Key: order-3001
+Content-Type: application/json
+
+{"amount": 30000, "currency": "INR", "method": "UPI", "payer": "timeout@upi"}
+
+### Recent payments of this merchant
+GET {{gateway}}/api/v1/payments?limit=10
+X-Api-Key: {{merchantKey}}
+
+### Attempts for a payment (paste an id)
+GET {{gateway}}/api/v1/payments/pay_REPLACE_ME/attempts
+X-Api-Key: {{merchantKey}}
+
+### Refund (paste an id)
+POST {{gateway}}/api/v1/payments/pay_REPLACE_ME/refund
+X-Api-Key: {{merchantKey}}
+
+### Take PSP alpha down (chaos)
+PUT {{gateway}}/api/v1/ops/chaos/alpha
+X-Api-Key: {{adminKey}}
+Content-Type: application/json
+
+{"down": true, "declineRate": 0, "errorRate": 0, "timeoutRate": 0, "latencyMs": 50}
+
+### Heal every PSP
+POST {{gateway}}/api/v1/ops/chaos/reset
+X-Api-Key: {{adminKey}}
+
+### Ops stats across merchants
+GET {{gateway}}/api/v1/ops/stats
+X-Api-Key: {{adminKey}}
+
+### Ledger: do the books balance?
+GET {{gateway}}/api/v1/ledger/integrity
+X-Api-Key: {{adminKey}}
+
+### Ledger: account balances
+GET {{gateway}}/api/v1/ledger/accounts
+X-Api-Key: {{adminKey}}
+
+### Merchant key on the ledger -> 403
+GET {{gateway}}/api/v1/ledger/accounts
+X-Api-Key: {{merchantKey}}

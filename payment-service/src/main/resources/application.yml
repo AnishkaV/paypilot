@@ -1,0 +1,60 @@
+# Settings shared by every profile. Profile-specific files:
+#   application-local.yml  (default) H2 + events over HTTP + in-memory locks. Nothing to install.
+#   application-infra.yml  Postgres + Kafka + Redis. Run with --spring.profiles.active=infra
+server:
+  port: 8081
+
+spring:
+  application:
+    name: payment-service
+  profiles:
+    default: local
+  threads:
+    virtual:
+      enabled: true   # used automatically on Java 21+, ignored on older JDKs
+  jpa:
+    open-in-view: false
+  flyway:
+    # {vendor} becomes h2 or postgresql, so each database gets SQL written for it.
+    locations: classpath:db/migration/{vendor}
+  mvc:
+    problemdetails:
+      enabled: true
+
+paypilot:
+  psp:
+    base-url: ${PSP_BASE_URL:http://localhost:8083}
+    providers: alpha,beta,gamma
+    connect-timeout: 1s
+    read-timeout: 2s
+    circuit-breaker:
+      sliding-window-size: 10
+      minimum-calls: 5
+      failure-rate-threshold: 50
+      wait-in-open-state: 20s
+  outbox:
+    batch-size: 100
+    poll-interval-ms: 500
+  sweeper:
+    interval-ms: 10000
+    stuck-after: 5s
+    batch-size: 50
+  idempotency:
+    lock-ttl: 30s
+  events:
+    # Only used by the local profile: where the outbox delivers events over HTTP.
+    http-subscribers: ${EVENT_SUBSCRIBERS:http://localhost:8082/internal/events}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.paypilot: INFO

@@ -1,0 +1,35 @@
+# Settings shared by every profile. Profile-specific files:
+#   application-local.yml  (default) H2, events arrive over HTTP at POST /internal/events
+#   application-infra.yml  Postgres + Kafka consumer with retries and a dead-letter topic
+server:
+  port: 8082
+
+spring:
+  application:
+    name: ledger-service
+  profiles:
+    default: local
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    open-in-view: false
+  flyway:
+    locations: classpath:db/migration/{vendor}
+  mvc:
+    problemdetails:
+      enabled: true
+
+paypilot:
+  ledger:
+    fee-bps: 200   # 2% platform fee
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

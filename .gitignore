@@ -1,0 +1,15 @@
+# Build output
+target/
+frontend/node_modules/
+frontend/dist/
+
+# Local runtime data (H2 databases, logs)
+data/
+logs/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.DS_Store
+*.log

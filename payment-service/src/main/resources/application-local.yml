@@ -1,0 +1,20 @@
+# Default profile: runs with nothing but a JDK.
+#   Database   H2 file database in ./data (delete the folder to start fresh)
+#   Events     outbox rows are delivered over HTTP to the ledger (same outbox, different transport)
+#   Locks      idempotency locks live in memory
+spring:
+  datasource:
+    url: jdbc:h2:file:${PAYPILOT_DATA_DIR:./data}/payments;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: none   # Flyway owns the schema
+  h2:
+    console:
+      enabled: true    # browse the tables at http://localhost:8081/h2-console
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
